@@ -69,7 +69,7 @@ AI模型支持 ✅
 
 ## 📝 更新日志
 
-### 1.0.0 (2024-03-xx)
+### 1.0.0 (2025-01-14)
 
 - 🎉 首次发布
 - ✨ 实现基础代码补全功能
@@ -91,7 +91,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 👨‍💻 作者
 
-作者名字 - [GitHub](https://github.com/LazyBoyJgn99/)
+戈丁学长 - [GitHub](https://github.com/LazyBoyJgn99/)
 
 ## 🙏 致谢
 
