@@ -91,9 +91,13 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 👨‍💻 作者
 
-作者名字 - [GitHub](https://github.com/你的GitHub用户名)
+作者名字 - [GitHub](https://github.com/LazyBoyJgn99/)
 
 ## 🙏 致谢
 
 - VS Code 团队
 - 所有贡献者
+
+## ⭐️Star 经历
+
+[![Star History Chart](https://api.star-history.com/svg?repos=LazyBoyJgn99/godin-copilot&type=Date)](https://star-history.com/#LazyBoyJgn99/godin-copilot&Date)
