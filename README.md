@@ -100,4 +100,6 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## ⭐️Star 经历
 
+## Star History
+
 [![Star History Chart](https://api.star-history.com/svg?repos=LazyBoyJgn99/godin-copilot&type=Date)](https://star-history.com/#LazyBoyJgn99/godin-copilot&Date)
