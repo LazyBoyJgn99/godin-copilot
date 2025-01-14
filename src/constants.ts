@@ -1,9 +1,9 @@
 export const LANGUAGE_PROMPTS: Record<string, string> = {
-    'typescript': '请用TypeScript实现以下功能：',
-    'javascript': '请用JavaScript实现以下功能：',
-    'python': '请用Python实现以下功能：',
-    'java': '请用Java实现以下功能：',
-    'go': '请用Go实现以下功能：',
-    'rust': '请用Rust实现以下功能：',
-    'default': '请实现以下功能：'
+    'typescript': 'You are a TypeScript expert. Please implement the following code in TypeScript:',
+    'javascript': 'You are a JavaScript expert. Please implement the following code in JavaScript:',
+    'python': 'You are a Python expert. Please implement the following code in Python:',
+    'java': 'You are a Java expert. Please implement the following code in Java:',
+    'go': 'You are a Go expert. Please implement the following code in Go:',
+    'rust': 'You are a Rust expert. Please implement the following code in Rust:',
+    'default': 'Please implement the following code following the language conventions:'
 }; 

@@ -5,7 +5,24 @@ export const CONTEXT_LINES = 5; // 获取上下文的行数
 
 export function getLanguageSpecificPrompt(language: string, text: string, context: string): string {
     const prompt = LANGUAGE_PROMPTS[language] || LANGUAGE_PROMPTS.default;
-    return `${prompt}\n上下文代码：\n${context}\n需要处理的部分：\n${text}`;
+    return `${prompt}
+
+Context:
+\`\`\`${language}
+${context}
+\`\`\`
+
+Task:
+${text}
+
+Requirements:
+1. Complete or modify the code based on the context
+2. Follow the language's best practices and conventions
+3. Ensure the code is compatible with the existing context
+4. Add necessary error handling
+5. Include brief comments for clarity
+
+Please provide the complete implementation:`;
 }
 
 export function getCodeContext(editor: vscode.TextEditor, selection: vscode.Selection): string {

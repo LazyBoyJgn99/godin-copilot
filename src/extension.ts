@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import fetch from 'node-fetch';
+import { getAIProvider } from './providers';
 
 interface AIModelConfig {
 	model: string;
@@ -30,119 +30,6 @@ export const LANGUAGE_PROMPTS: Record<string, string> = {
 
 const CONTEXT_LINES = 5; // 获取上下文的行数
 
-class DeepseekProvider implements AIProvider {
-	async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
-		const response = await fetch(`${config.baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${config.apiKey}`
-			},
-			body: JSON.stringify({
-				model: config.model.replace('deepseek/', ''),
-				messages: [
-					{
-						role: 'system',
-						content: '你是一个专业的代码助手，专注于代码生成和补全。请根据用户的描述或代码提供准确的代码实现。'
-					},
-					{
-						role: 'user',
-						content: prompt
-					}
-				],
-				temperature: 0.5,
-				max_tokens: 2048,
-				stop: ['<|endoftext|>']
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(`Deepseek API请求失败: ${response.statusText}`);
-		}
-
-		const data = await response.json();
-		return data.choices[0].message.content.trim();
-	}
-}
-
-class ZhipuProvider implements AIProvider {
-	async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
-		const response = await fetch(`${config.baseUrl || 'https://open.bigmodel.cn/api/paas/v3'}/chat/completions`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${config.apiKey}`
-			},
-			body: JSON.stringify({
-				model: config.model.replace('zhipu/', ''),
-				messages: [
-					{
-						role: 'system',
-						content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
-					},
-					{
-						role: 'user',
-						content: prompt
-					}
-				],
-				temperature: 0.7,
-				max_tokens: 2048
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(`智谱API请求失败: ${response.statusText}`);
-		}
-
-		const data = await response.json();
-		return data.choices[0].message.content.trim();
-	}
-}
-
-class BaiduProvider implements AIProvider {
-	async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
-		const response = await fetch(`${config.baseUrl || 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop'}/code_chat`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${config.apiKey}`
-			},
-			body: JSON.stringify({
-				messages: [
-					{
-						role: 'system',
-						content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
-					},
-					{
-						role: 'user',
-						content: prompt
-					}
-				],
-				temperature: 0.7,
-				top_p: 0.8
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(`百度API请求失败: ${response.statusText}`);
-		}
-
-		const data = await response.json();
-		return data.result.trim();
-	}
-}
-
-function getAIProvider(model: string): AIProvider {
-	if (model.startsWith('deepseek/')) {
-		return new DeepseekProvider();
-	} else if (model.startsWith('zhipu/')) {
-		return new ZhipuProvider();
-	} else if (model.startsWith('baidu/')) {
-		return new BaiduProvider();
-	}
-	return new DeepseekProvider(); // 默认使用Deepseek
-}
-
 function getConfiguration(): AIModelConfig {
 	const config = vscode.workspace.getConfiguration('godinCopilot');
 	const model = config.get<string>('model') || 'deepseek/deepseek-coder-33b-instruct';
@@ -163,16 +50,17 @@ async function validateApiKey(config: AIModelConfig): Promise<{ isValid: boolean
 			return { isValid: false, error: '请先配置API密钥' };
 		}
 		
-		if (config.apiKey.length < 32 || !/^[a-zA-Z0-9_-]+$/.test(config.apiKey)) {
+		if (!/^[a-zA-Z0-9_-]+$/.test(config.apiKey)) {
 			return { isValid: false, error: 'API密钥格式不正确' };
 		}
 
 		console.log('开始验证API密钥...');
-		await provider.generateCompletion('测试连接', config);
+		await provider.generateCompletion('// 测试API连接\nfunction test() {\n', config);
 		console.log('API密钥验证成功');
 		return { isValid: true };
 	} catch (error: any) {
 		console.error('API密钥验证失败:', error);
+		console.log('错误详情:', error.message);
 		let errorMessage = '验证失败';
 		
 		if (error.message.includes('401')) {
@@ -181,6 +69,8 @@ async function validateApiKey(config: AIModelConfig): Promise<{ isValid: boolean
 			errorMessage = 'API密钥没有访问权限';
 		} else if (error.message.includes('429')) {
 			errorMessage = 'API调用次数超限';
+		} else {
+			errorMessage = `验证失败: ${error.message}`;
 		}
 		
 		return { isValid: false, error: errorMessage };

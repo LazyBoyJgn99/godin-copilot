@@ -1,56 +1,52 @@
-import fetch, { Response } from 'node-fetch';
+import axios from 'axios';
 import { AIModelConfig, AIProvider } from './types';
 
 export class DeepseekProvider implements AIProvider {
     async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
         console.log('Deepseek请求配置:', {
-            url: `${config.baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`,
+            url: 'https://api.deepseek.com/beta/completions',
             model: config.model.replace('deepseek/', ''),
             apiKeyLength: config.apiKey.length
         });
 
-        const response = await fetch(`${config.baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': config.apiKey
-            },
-            body: JSON.stringify({
-                model: config.model.replace('deepseek/', ''),
-                messages: [
-                    {
-                        role: 'system',
-                        content: '你是一个专业的代码助手，专注于代码生成和补全。请根据用户的描述或代码提供准确的代码实现。'
-                    },
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ],
-                temperature: 0.5,
-                max_tokens: 2048
-            })
-        });
-
-        if (!response.ok) {
-            const errorMessage = await this.getErrorMessage(response);
-            console.error('Deepseek响应错误:', {
-                status: response.status,
-                statusText: response.statusText,
-                errorMessage
+        try {
+            const response = await axios({
+                method: 'post',
+                maxBodyLength: Infinity,
+                url: 'https://api.deepseek.com/beta/completions',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                data: {
+                    model: "deepseek-coder",
+                    prompt: prompt,
+                    suffix: "",  // 可选的后缀
+                    max_tokens: 4096,
+                    temperature: 0.3,
+                    top_p: 0.95,
+                    frequency_penalty: 0,
+                    presence_penalty: 0,
+                    stop: null,
+                    echo: false,
+                    stream: false
+                }
             });
-            throw new Error(errorMessage);
-        }
 
-        const data = await response.json();
-        return data.choices[0].message.content.trim();
+            return response.data.choices[0].text.trim();
+        } catch (error: any) {
+            console.error('Deepseek响应错误:', error.response?.data || error.message);
+            throw new Error(this.getErrorMessage(error));
+        }
     }
 
-    private async getErrorMessage(response: Response): Promise<string> {
-        try {
-            const errorData = await response.json();
-            console.log('API错误详情:', errorData);
-            switch (response.status) {
+    private getErrorMessage(error: any): string {
+        if (error.response) {
+            const status = error.response.status;
+            const data = error.response.data;
+            
+            switch (status) {
                 case 401:
                     return '无效的API密钥，请检查密钥格式是否正确';
                 case 403:
@@ -58,79 +54,79 @@ export class DeepseekProvider implements AIProvider {
                 case 429:
                     return '请求太频繁，请稍后再试';
                 default:
-                    return `请求失败 (${response.status}): ${errorData.error?.message || errorData.message || response.statusText}`;
+                    return `请求失败 (${status}): ${data.error?.message || data.message || error.message}`;
             }
-        } catch (error) {
-            console.error('解析错误响应失败:', error);
-            return `请求失败 (${response.status}: ${response.statusText})`;
         }
+        return `请求失败: ${error.message}`;
     }
 }
 
 export class ZhipuProvider implements AIProvider {
     async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
-        const response = await fetch(`${config.baseUrl || 'https://open.bigmodel.cn/api/paas/v3'}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`
-            },
-            body: JSON.stringify({
-                model: config.model.replace('zhipu/', ''),
-                messages: [
-                    {
-                        role: 'system',
-                        content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
-                    },
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 2048
-            })
-        });
+        try {
+            const response = await axios({
+                method: 'post',
+                url: `${config.baseUrl || 'https://open.bigmodel.cn/api/paas/v3'}/chat/completions`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                data: {
+                    model: config.model.replace('zhipu/', ''),
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 2048
+                }
+            });
 
-        if (!response.ok) {
-            throw new Error(`智谱API请求失败: ${response.statusText}`);
+            return response.data.choices[0].message.content.trim();
+        } catch (error: any) {
+            console.error('智谱API响应错误:', error.response?.data || error.message);
+            throw new Error(`智谱API请求失败: ${error.response?.statusText || error.message}`);
         }
-
-        const data = await response.json();
-        return data.choices[0].message.content.trim();
     }
 }
 
 export class BaiduProvider implements AIProvider {
     async generateCompletion(prompt: string, config: AIModelConfig): Promise<string> {
-        const response = await fetch(`${config.baseUrl || 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop'}/code_chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`
-            },
-            body: JSON.stringify({
-                messages: [
-                    {
-                        role: 'system',
-                        content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
-                    },
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7,
-                top_p: 0.8
-            })
-        });
+        try {
+            const response = await axios({
+                method: 'post',
+                url: `${config.baseUrl || 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop'}/code_chat`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config.apiKey}`
+                },
+                data: {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一个代码助手，请根据用户的描述或代码补全相应的代码。请直接返回代码，不需要解释。'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7,
+                    top_p: 0.8
+                }
+            });
 
-        if (!response.ok) {
-            throw new Error(`百度API请求失败: ${response.statusText}`);
+            return response.data.result.trim();
+        } catch (error: any) {
+            console.error('百度API响应错误:', error.response?.data || error.message);
+            throw new Error(`百度API请求失败: ${error.response?.statusText || error.message}`);
         }
-
-        const data = await response.json();
-        return data.result.trim();
     }
 }
 

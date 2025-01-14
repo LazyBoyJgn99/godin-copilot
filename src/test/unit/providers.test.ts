@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { DeepseekProvider, ZhipuProvider, BaiduProvider } from '../../providers';
-import fetch from 'node-fetch';
 
 describe('AI Providers Tests', () => {
     let fetchStub: sinon.SinonStub;

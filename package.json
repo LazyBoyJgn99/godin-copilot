@@ -2,7 +2,7 @@
   "name": "godin-copilot",
   "displayName": "godin-copilot",
   "description": "基于大语言模型的代码扩写VSCode插件",
-  "version": "0.0.2",
+  "version": "0.0.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/LazyBoyJgn99/godin-copilot.git"
@@ -15,7 +15,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:godin-copilot.expand"
+    "onCommand:godin-copilot.expand",
+    "onStartupFinished"
   ],
   "capabilities": {
     "documentFormattingProvider": true
@@ -37,25 +38,25 @@
       }
     ],
     "configuration": {
+      "type": "object",
       "title": "Godin Copilot",
       "properties": {
         "godinCopilot.model": {
           "type": "string",
-          "default": "deepseek/deepseek-coder-33b-instruct",
+          "default": "deepseek/deepseek-coder",
           "enum": [
-            "deepseek/deepseek-coder-33b-instruct",
-            "deepseek/deepseek-coder-6.7b-instruct",
+            "deepseek/deepseek-coder",
             "zhipu/chatglm-turbo",
             "zhipu/chatglm-pro",
             "baidu/ernie-code"
           ],
           "enumDescriptions": [
-            "Deepseek Coder 33B - 专注代码的大模型",
-            "Deepseek Coder 6.7B - 轻量级代码模型",
+            "Deepseek Coder - 专注代码补全的大模型",
             "智谱 ChatGLM Turbo - 高性能通用模型",
             "智谱 ChatGLM Pro - 专业版",
             "文心一言 - 代码创作"
           ],
+          "scope": "application",
           "description": "选择要使用的大语言模型"
         },
         "godinCopilot.baseUrl": {
@@ -68,6 +69,16 @@
           "default": "",
           "markdownDescription": "请在此处配置您的API密钥。\n\n获取方式：\n- Deepseek API key: https://platform.deepseek.com/\n- 智谱API key: https://open.bigmodel.cn/usercenter/apikeys\n- 文心一言API key: https://cloud.baidu.com/product/wenxinworkshop\n\n**注意：请勿将API密钥提交到代码仓库中**",
           "description": "API密钥"
+        },
+        "godinCopilot.contextLines": {
+          "type": "number",
+          "default": 5,
+          "description": "获取上下文的行数"
+        },
+        "godinCopilot.cacheTimeout": {
+          "type": "number",
+          "default": 300,
+          "description": "缓存超时时间（秒）"
         }
       }
     }
@@ -103,7 +114,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "node-fetch": "^2.7.0",
+    "axios": "^1.7.9",
     "save": "^2.9.0",
     "vscode-test": "^1.6.1"
   }
