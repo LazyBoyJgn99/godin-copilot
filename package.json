@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/LazyBoyJgn99/godin-copilot.git"
   },
-  "publisher": "godin",
+  "publisher": "godinLazyBoyJgn99",
   "engines": {
     "vscode": "^1.80.0"
   },
